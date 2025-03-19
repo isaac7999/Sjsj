@@ -1,182 +1,155 @@
--- Criando o painel principal
-local ScreenGui = Instance.new("ScreenGui")
-local MainFrame = Instance.new("Frame")
-local MinimizeButton = Instance.new("TextButton")
-local TitleLabel = Instance.new("TextLabel")
-local EspLineButton = Instance.new("TextButton")
-local EspNickButton = Instance.new("TextButton")
-local AntiLagButton = Instance.new("TextButton")
-local AutoCLButton = Instance.new("TextButton")
-local HitboxButton = Instance.new("TextButton")
-local TeleportButton = Instance.new("TextButton")
-local TeleportIlegalButton = Instance.new("TextButton") -- Botão Teleporte Ilegal
-local TeleportPracaButton = Instance.new("TextButton") -- Novo botão Teleporte Praça
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 
--- Configuração do painel principal
-ScreenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
-MainFrame.Size = UDim2.new(0, 300, 0, 450)  -- Aumentei o tamanho para acomodar o novo botão
-MainFrame.Position = UDim2.new(0.5, -150, 0.5, -225)  -- Ajustei para o novo tamanho
-MainFrame.BackgroundColor3 = Color3.fromRGB(173, 216, 230) -- Azul Claro
-MainFrame.Parent = ScreenGui
+local player = Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+local backpack = player.Backpack
 
--- Título do painel
-TitleLabel.Size = UDim2.new(1, 0, 0, 30)
-TitleLabel.Position = UDim2.new(0, 0, 0, 0)
-TitleLabel.BackgroundTransparency = 1
-TitleLabel.Text = "AWAYS SIMPLES GRÁTIS"
-TitleLabel.TextSize = 20
-TitleLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
-TitleLabel.Parent = MainFrame
+-- Criar Tool (BÍBLIA)
+local bibleTool = Instance.new("Tool")
+bibleTool.Name = "BÍBLIA SAGRADA"
+bibleTool.RequiresHandle = false
+bibleTool.Parent = backpack
 
--- Botão de minimizar
-MinimizeButton.Size = UDim2.new(0, 50, 0, 25)
-MinimizeButton.Position = UDim2.new(1, -55, 0, 5)
-MinimizeButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-MinimizeButton.Text = "_"
-MinimizeButton.Parent = MainFrame
-MinimizeButton.MouseButton1Click:Connect(function()
-    MainFrame.Visible = not MainFrame.Visible
-end)
+-- Criar Bíblia 3D na Mão
+local function createBibleModel()
+    local bible = Instance.new("Part")
+    bible.Size = Vector3.new(2, 3, 0.5)
+    bible.Color = Color3.fromRGB(50, 50, 50)
+    bible.Material = Enum.Material.SmoothPlastic
+    bible.Name = "Bíblia"
+    bible.CanCollide = false
 
--- Função para alternar cor do botão
-toggleButton = function(button, state)
-    if state then
-        button.BackgroundColor3 = Color3.fromRGB(0, 255, 0) -- Verde
-    else
-        button.BackgroundColor3 = Color3.fromRGB(255, 0, 0) -- Vermelho
-    end
+    local mesh = Instance.new("SpecialMesh", bible)
+    mesh.MeshType = Enum.MeshType.Brick
+    mesh.Scale = Vector3.new(1, 1, 0.2)
+
+    local weld = Instance.new("Weld", bible)
+    weld.Part0 = char:FindFirstChild("RightHand") or char:FindFirstChild("Right Arm")
+    weld.Part1 = bible
+    weld.C0 = CFrame.new(0, 0, -1)
+
+    return bible
 end
 
--- Criando os botões e funcionalidades
-toggleFunctions = {}
+-- Criar Título na Cabeça
+local function createTitle()
+    local billboard = Instance.new("BillboardGui")
+    billboard.Size = UDim2.new(4, 0, 1, 0)
+    billboard.StudsOffset = Vector3.new(0, 3, 0)
+    billboard.Adornee = char.Head
+    billboard.Parent = char.Head
 
-local function createButton(name, pos, callback)
-    local button = Instance.new("TextButton")
-    button.Size = UDim2.new(0, 100, 0, 25)
-    button.Position = UDim2.new(0, 10, 0, pos)
-    button.BackgroundColor3 = Color3.fromRGB(255, 0, 0) -- Vermelho por padrão
-    button.Text = name
-    button.Parent = MainFrame
-    local state = false
-    button.MouseButton1Click:Connect(function()
-        state = not state
-        toggleButton(button, state)
-        callback(state)
+    local textLabel = Instance.new("TextLabel", billboard)
+    textLabel.Size = UDim2.new(1, 0, 1, 0)
+    textLabel.BackgroundTransparency = 1
+    textLabel.TextScaled = true
+    textLabel.TextColor3 = Color3.fromRGB(255, 255, 0)
+    textLabel.TextStrokeTransparency = 0
+    textLabel.Text = "PROTEGIDO ⚔"
+    textLabel.Font = Enum.Font.GothamBlack
+    return billboard
+end
+
+-- Criar Áurea de Proteção
+local function createAura()
+    local aura = Instance.new("Part")
+    aura.Size = Vector3.new(12, 12, 12) -- Aumentei um pouco mais a áurea
+    aura.Shape = Enum.PartType.Ball
+    aura.Color = Color3.fromRGB(255, 255, 255)
+    aura.Material = Enum.Material.ForceField
+    aura.Transparency = 0.5
+    aura.Anchored = true
+    aura.CanCollide = false
+    aura.Parent = char
+
+    -- Mover áurea com o personagem
+    task.spawn(function()
+        while aura.Parent do
+            if char and char.PrimaryPart then
+                aura.Position = char.PrimaryPart.Position
+            end
+            task.wait(0.1) -- Atualiza posição sem travar
+        end
     end)
-    return button
+
+    return aura
 end
 
--- ESP Line
-toggleFunctions["ESP Line"] = function(state)
-    if state then
-        for _, player in pairs(game.Players:GetPlayers()) do
-            if player ~= game.Players.LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                local attachment1 = Instance.new("Attachment", player.Character.HumanoidRootPart)
-                local attachment2 = Instance.new("Attachment", game.Players.LocalPlayer.Character.HumanoidRootPart)
-                local beam = Instance.new("Beam")
-                beam.Attachment0 = attachment1
-                beam.Attachment1 = attachment2
-                beam.Parent = player.Character
-                beam.Color = ColorSequence.new(Color3.fromRGB(255, 0, 0))
-            end
-        end
-    else
-        for _, player in pairs(game.Players:GetPlayers()) do
-            if player.Character then
-                for _, obj in pairs(player.Character:GetChildren()) do
-                    if obj:IsA("Beam") then obj:Destroy() end
+-- Sistema de Dano na Áurea (a cada 0.5s para evitar lag)
+local function applyAuraDamage(aura)
+    task.spawn(function()
+        while aura.Parent do
+            for _, enemy in pairs(workspace:GetDescendants()) do
+                if enemy:IsA("Model") and enemy ~= char and enemy:FindFirstChildOfClass("Humanoid") then
+                    local humanoid = enemy:FindFirstChildOfClass("Humanoid")
+                    local rootPart = enemy:FindFirstChild("HumanoidRootPart")
+
+                    if humanoid and rootPart then
+                        local distance = (rootPart.Position - char.PrimaryPart.Position).Magnitude
+                        if distance <= 6 then -- Se estiver dentro da áurea, leva dano
+                            humanoid:TakeDamage(20) -- Dano otimizado
+                        end
+                    end
                 end
             end
+            task.wait(0.5) -- Aplica dano a cada 0.5s (reduz lag)
         end
-    end
+    end)
 end
-EspLineButton = createButton("ESP Line", 40, toggleFunctions["ESP Line"])
 
--- ESP Nick
-toggleFunctions["ESP Nick"] = function(state)
-    if state then
-        for _, player in pairs(game.Players:GetPlayers()) do
-            if player.Character and not player.Character:FindFirstChild("BillboardGui") then
-                local gui = Instance.new("BillboardGui", player.Character)
-                gui.Size = UDim2.new(0, 100, 0, 50)
-                gui.AlwaysOnTop = true
-                local text = Instance.new("TextLabel", gui)
-                text.Size = UDim2.new(1, 0, 1, 0)
-                text.Text = player.Name
-                text.TextColor3 = Color3.fromRGB(0, 0, 0) -- Nome Preto
-                text.TextSize = 14 -- Nome Menor
-                text.BackgroundTransparency = 1
+-- Auto Cura quando HP menor que 100
+local function autoHeal()
+    task.spawn(function()
+        while char and char:FindFirstChildOfClass("Humanoid") do
+            local humanoid = char:FindFirstChildOfClass("Humanoid")
+            if humanoid.Health < 100 then
+                humanoid.Health = humanoid.Health + 10 -- Cura aumentada
             end
+            task.wait(1.5) -- Cura a cada 1.5 segundos (evita travamento)
         end
-    else
-        for _, player in pairs(game.Players:GetPlayers()) do
-            if player.Character and player.Character:FindFirstChild("BillboardGui") then
-                player.Character.BillboardGui:Destroy()
-            end
-        end
-    end
+    end)
 end
-EspNickButton = createButton("ESP Nick", 70, toggleFunctions["ESP Nick"])
 
--- Auto CL
-toggleFunctions["Auto CL"] = function(state)
-    if state then
-        game:GetService("RunService").Stepped:Connect(function()
-            if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then
-                if game.Players.LocalPlayer.Character.Humanoid.Health == 0 then
-                    game.Players.LocalPlayer:Kick("Removido pelo servidor.")
-                end
-            end
-        end)
-    end
-end
-AutoCLButton = createButton("Auto CL", 160, toggleFunctions["Auto CL"])
+-- Criar Efeitos ao Equipar
+bibleTool.Equipped:Connect(function()
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
 
--- Hitbox
-toggleFunctions["Hitbox"] = function(state)
-    for _, player in pairs(game.Players:GetPlayers()) do
-        if player.Character and player.Character:FindFirstChild("Head") then
-            player.Character.Head.Size = state and Vector3.new(5, 5, 5) or Vector3.new(1, 1, 1)
-        end
-    end
-end
-HitboxButton = createButton("Hitbox", 190, toggleFunctions["Hitbox"])
+    local bible = createBibleModel()
+    bible.Parent = char
 
--- Criando botão de teleporte
-TeleportButton.Size = UDim2.new(0, 150, 0, 30)
-TeleportButton.Position = UDim2.new(0, 75, 0, 250)
-TeleportButton.BackgroundColor3 = Color3.fromRGB(0, 255, 0) -- Verde
-TeleportButton.Text = "Teleporte Lavagem"
-TeleportButton.Parent = MainFrame
-TeleportButton.MouseButton1Click:Connect(function()
-    local player = game.Players.LocalPlayer
-    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-        player.Character.HumanoidRootPart.CFrame = CFrame.new(19764.6, 69.6, 13152.5)
+    local title = createTitle()
+    title.Parent = char.Head
+
+    local aura = createAura()
+    applyAuraDamage(aura)
+    autoHeal() -- Ativa a cura automática
+
+    -- Mudar Animação de Movimento (Flutuação)
+    local humanoid = char:FindFirstChildOfClass("Humanoid")
+    if humanoid then
+        humanoid.WalkSpeed = 8 -- Reduzi a velocidade para parecer flutuação
+        humanoid.JumpPower = 60 -- Mais alto para parecer leve
     end
 end)
 
--- Criando botão de teleporte ilegal
-TeleportIlegalButton.Size = UDim2.new(0, 150, 0, 30)
-TeleportIlegalButton.Position = UDim2.new(0, 75, 0, 290)  -- Ajustei a posição para acomodar o novo botão
-TeleportIlegalButton.BackgroundColor3 = Color3.fromRGB(255, 0, 0) -- Vermelho
-TeleportIlegalButton.Text = "Teleporte Ilegal"
-TeleportIlegalButton.Parent = MainFrame
-TeleportIlegalButton.MouseButton1Click:Connect(function()
-    local player = game.Players.LocalPlayer
-    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-        player.Character.HumanoidRootPart.CFrame = CFrame.new(12016.9, 30.0, 12810.3) -- Coordenadas do teleporte ilegal
-    end
-end)
+-- Remover Efeitos ao Desequipar
+bibleTool.Unequipped:Connect(function()
+    if char then
+        for _, obj in pairs(char:GetChildren()) do
+            if obj:IsA("Part") and (obj.Name == "Bíblia" or obj.Shape == Enum.PartType.Ball) then
+                obj:Destroy()
+            end
+            if obj:IsA("BillboardGui") then
+                obj:Destroy()
+            end
+        end
 
--- Criando botão de teleporte para a Praça
-TeleportPracaButton.Size = UDim2.new(0, 150, 0, 30)
-TeleportPracaButton.Position = UDim2.new(0, 75, 0, 330)  -- Ajustei a posição para acomodar o novo botão
-TeleportPracaButton.BackgroundColor3 = Color3.fromRGB(0, 0, 255) -- Azul
-TeleportPracaButton.Text = "Teleporte Praça"
-TeleportPracaButton.Parent = MainFrame
-TeleportPracaButton.MouseButton1Click:Connect(function()
-    local player = game.Players.LocalPlayer
-    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-        player.Character.HumanoidRootPart.CFrame = CFrame.new(-297.6, 4.8, 384.2) -- Coordenadas da Praça
+        -- Restaurar Movimentação Normal
+        local humanoid = char:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid.WalkSpeed = 16
+            humanoid.JumpPower = 50
+        end
     end
 end)
